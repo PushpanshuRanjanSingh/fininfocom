@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "61041269897",
+    "project_id": "fininfocom-uk",
+    "storage_bucket": "fininfocom-uk.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:61041269897:android:c6044ab9f854750400fa58",
+        "android_client_info": {
+          "package_name": "com.example.fininfocom"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "61041269897-o4s4ab83nrlnhnn74767qb7vov012tdh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7G4RtIWdmX6I5bVde0TUWfpHz3JkyOg0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "61041269897-o4s4ab83nrlnhnn74767qb7vov012tdh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "61041269897-kaekeu7hjau7poqel4ghakqs4nh2ck3s.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.fininfocom"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
