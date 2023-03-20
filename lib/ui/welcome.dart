@@ -14,9 +14,10 @@ class WelcomePage extends StatefulWidget {
 
 class _WelcomePageState extends State<WelcomePage> {
   bool _isRegister = true;
+  
   @override
   Widget build(BuildContext context) {
-    Size screensize = MediaQuery.of(context).size;
+    Size screenSize = MediaQuery.of(context).size;
     return Scaffold(
         body: Padding(
       padding: const EdgeInsets.all(16.0),
@@ -26,7 +27,7 @@ class _WelcomePageState extends State<WelcomePage> {
         children: [
           SvgPicture.asset(
             Asset.welcome,
-            height: screensize.height * 0.45,
+            height: screenSize.height * 0.45,
           ),
           Text(
             "Infocom Team Collaboration",
@@ -107,6 +108,7 @@ class _WelcomePageState extends State<WelcomePage> {
       required Function() onPressed}) {
     return Expanded(
       child: Container(
+        height: 50,
         decoration: BoxDecoration(color: color, borderRadius: borderRadius),
         child: TextButton(
           style: ButtonStyle(

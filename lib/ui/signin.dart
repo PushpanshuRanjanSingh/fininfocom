@@ -64,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
                           if (value!.isEmpty) {
                             return 'Please enter your email';
                           } else if (!RegExp(
-                                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
                               .hasMatch(value)) {
                             return 'Please enter a valid email address';
                           }
@@ -92,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                           if (value!.isEmpty) {
                             return 'Please enter your password';
                           } else if (!RegExp(
-                                  r'^(?=.*[A-Z])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$')
+                              r'^(?=.*[A-Z])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$')
                               .hasMatch(value)) {
                             return 'Password must must contain at least 1 capital ,1 symbol, minimum 8 characters';
                           }
@@ -104,67 +104,68 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       !_isLoading
                           ? SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                  onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      setState(() {
-                                        _isLoading = true;
-                                      });
-                                      AuthenticationHelper.signIn(context,
-                                              email:
-                                                  _emailController.text.trim(),
-                                              password: _passwordController.text
-                                                  .trim())
-                                          .then((value) async {
-                                        if (value == null) {
-                                          snackBarMSG(context,
-                                              message: 'Login Success',
-                                              color: Colors.green);
-                                          String uid = AuthenticationHelper
-                                              .auth.currentUser!.uid
-                                              .toString();
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                            onPressed: () async {
+                              if (_formKey.currentState!.validate())  {
+                                setState(() {
+                                  _isLoading = true;
+                                });
+                              await  AuthenticationHelper.signIn(context,
+                                    email:
+                                    _emailController.text.trim(),
+                                    password: _passwordController.text
+                                        .trim())
+                                    .then((value) async {
+                                  if (value == null) {
+                                    snackBarMSG(context,
+                                        message: 'Login Success',
+                                        color: Colors.green);
+                                    String uid = AuthenticationHelper
+                                        .auth.currentUser!.uid
+                                        .toString();
 
-                                          debugPrint("UUUUUIIID: $uid");
+                                    await AuthenticationHelper
+                                        .firebaseFirestore.collection("users")
+                                        .doc(uid)
+                                        .get()
+                                        .then(
+                                            (DocumentSnapshot snapshot) {
+                                          SharedPref.setUserdata(
+                                              snapshot["username"],
+                                              snapshot["email"],
+                                              snapshot["role"],
+                                              uid,
+                                              snapshot["displayImage"],
+                                              snapshot["password"]);
+                                        }).then((value) {
 
-                                          Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const HomePage(),
-                                              ),
-                                              (route) => false);
+                                       Navigator.pushAndRemoveUntil(
+                                           context,
+                                           MaterialPageRoute(
+                                             builder: (context) =>
+                                             const HomePage(),
+                                           ),
+                                               (route) => false);
 
-                                          await AuthenticationHelper
-                                              .firebaseFirestore
-                                              .doc(uid)
-                                              .get()
-                                              .then(
-                                                  (DocumentSnapshot snapshot) {
-                                            SharedPref.setUserdata(
-                                                snapshot["username"],
-                                                snapshot["email"],
-                                                snapshot["role"],
-                                                uid,
-                                                snapshot["displayImage"],
-                                                snapshot["password"]);
-                                          });
-                                        } else {
-                                          snackBarMSG(context,
-                                              message:
-                                                  'Login failed. Please try again.');
-                                        }
-                                      });
-                                    }
-                                    setState(() {
-                                      _isLoading = false;
                                     });
-                                  },
-                                  child: const Text("Login")),
-                            )
+                                  } else {
+                                    snackBarMSG(context,
+                                        message:
+                                        'Login failed. Please try again.');
+                                  }
+                                });
+                              }
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            },
+                            child: const Text("Login")),
+                      )
                           : const Center(
-                              child: CircularProgressIndicator.adaptive(),
-                            )
+                        child: CircularProgressIndicator.adaptive(),
+                      )
                     ],
                   ))
             ],

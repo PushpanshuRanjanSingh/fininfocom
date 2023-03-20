@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fininfocom/constant/constant.dart';
 import 'package:fininfocom/operation/firebasecall.dart';
@@ -17,8 +19,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final scaffoldKey = GlobalKey<ScaffoldState>();
   CollectionReference userCollection =
       AuthenticationHelper.firebaseFirestore.collection('users');
+
   User? user = AuthenticationHelper.auth.currentUser;
   String? email;
   String? username;
@@ -35,13 +39,15 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _usernameController = TextEditingController();
 
   List<String?>? userData;
+  final Stream<QuerySnapshot> _usersStream =
+      FirebaseFirestore.instance.collection('users').snapshots();
 
   getUserDatafromShared() async {
     userData = await SharedPref.getUserData();
+    debugPrint(userData.toString());
   }
 
   getUserDetail() {
-
     userCollection.doc(user!.uid).get().then((DocumentSnapshot snapshot) {
       email = snapshot["email"];
       username = snapshot["username"];
@@ -66,6 +72,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: const Text('Fin Infocom'),
         centerTitle: true,
@@ -121,19 +128,58 @@ class _HomePageState extends State<HomePage> {
         ]),
       ),
       body: !_loader
-          ? FutureBuilder(
-              future: FireStoreDataBase().getData(),
-              builder: (context, snapshot) {
+          ?
+          // ? FutureBuilder(
+          //     future: FireStoreDataBase().getData(),
+          //     builder: (context, snapshot) {
+          //       if (snapshot.hasError) {
+          //         return const Text(
+          //           "Something went wrong",
+          //         );
+          //       }
+          //       if (snapshot.connectionState == ConnectionState.done) {
+          //         var dataList = snapshot.data as List;
+          //         return buildItems(dataList);
+          //       }
+          //       return const Center(child: CircularProgressIndicator());
+          //     },
+          //   )
+
+          StreamBuilder<QuerySnapshot>(
+              stream: _usersStream,
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasError) {
-                  return const Text(
-                    "Something went wrong",
-                  );
+                  return const Center(child: Text('Something went wrong'));
                 }
-                if (snapshot.connectionState == ConnectionState.done) {
-                  var dataList = snapshot.data as List;
-                  return buildItems(dataList);
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator.adaptive(),);
                 }
-                return const Center(child: CircularProgressIndicator());
+
+                return ListView(
+                  children: snapshot.data!.docs
+                      .map((DocumentSnapshot document) {
+                        Map<String, dynamic> data =
+                            document.data()! as Map<String, dynamic>;
+                        return ListTile(
+                          leading: SvgPicture.string(
+                            data["displayImage"],
+                            height: 50,
+                            width: 50,
+                          ),
+                          title: Text(
+                            data["username"],
+                          ),
+                          subtitle: Text(data["email"]),
+                          trailing: Text(
+                            userRole(data["role"]),
+                          ),
+                        );
+                      })
+                      .toList()
+                      .cast(),
+                );
               },
             )
           : const Center(
@@ -245,7 +291,7 @@ class _HomePageState extends State<HomePage> {
                                 password: _passwordController.text.trim(),
                               ).then((value) async {
                                 if (value == null) {
-                                  AuthenticationHelper.userDetailSetup(
+                                  await AuthenticationHelper.userDetailSetup(
                                           username,
                                           _emailController.text.trim(),
                                           _userRole,
@@ -254,11 +300,32 @@ class _HomePageState extends State<HomePage> {
                                       .then((value) {
                                     AuthenticationHelper.auth.currentUser
                                         ?.updateDisplayName(username);
+                                  }).then((value) {
+                                    if (value == null) {
+                                      if (scaffoldKey
+                                          .currentState!.isDrawerOpen) {
+                                        resetController();
+                                        Navigator.pop(context);
+                                        scaffoldKey.currentState!.closeDrawer();
+                                      }
+                                      snackBarMSG(context,
+                                          message: 'User Added Successfully',
+                                          color: Colors.green);
+                                    }
+                                    //TODO: Remove code block
+                                    Future.delayed(const Duration(seconds: 1),
+                                        () async {
+                                      await AuthenticationHelper.signOut()
+                                          .then((value) async {
+                                        if (value == null) {
+                                          await AuthenticationHelper.signIn(
+                                              context,
+                                              email: userData![1]!,
+                                              password: userData![5]!);
+                                        }
+                                      });
+                                    });
                                   });
-                                  snackBarMSG(context,
-                                      message: 'User Added Successfully',
-                                      color: Colors.green);
-                                  
                                 } else {
                                   snackBarMSG(context,
                                       message:
@@ -270,9 +337,6 @@ class _HomePageState extends State<HomePage> {
                                 _formValidation = FormValidation.FAILED;
                               });
                             }
-
-                            debugPrint(
-                                "ERROROOROROROROROROORR: ${AuthenticationHelper.auth.currentUser!.uid.toString()}");
                           },
                           child: const Text("Add User")),
                     )
@@ -285,6 +349,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   resetController() {
+    _usernameController.clear();
     _emailController.clear();
     _passwordController.clear();
     _userRole = null;

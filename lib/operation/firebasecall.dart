@@ -3,11 +3,12 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:random_avatar/random_avatar.dart';
 
 class AuthenticationHelper {
   static final FirebaseAuth auth = FirebaseAuth.instance;
   static final FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+
+
 
   //SIGN UP METHOD
   static Future signUp(
@@ -85,6 +86,7 @@ class AuthenticationHelper {
 
   //SIGN OUT METHOD
   static Future signOut() async {
+    debugPrint("Added Succ");
     try {
       await auth.signOut();
       return null;
@@ -105,8 +107,11 @@ class AuthenticationHelper {
         'email': email,
         'password': password,
         'displayImage':
-            RandomAvatarString(generateRandomString(10), trBackground: true),
+        randomAvatarString,
       });
+
+
+      debugPrint("Added Succ");
       return null;
     } on FirebaseException catch (e) {
       return e.message;

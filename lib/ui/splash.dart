@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fininfocom/ui/home.dart';
 import 'package:fininfocom/ui/welcome.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,7 +15,7 @@ class SplashPage extends StatefulWidget {
 class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
-    Future.delayed(const Duration(seconds: 1), () {
+    Timer(Duration(seconds: 1), () {
       checkAuth(context);
     });
     super.initState();

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:random_avatar/random_avatar.dart';
 import 'package:shortid/shortid.dart';
@@ -147,70 +149,39 @@ class _RegisterPageState extends State<RegisterPage> {
                       !_isLoading
                           ? SizedBox(
                               width: double.infinity,
+                              height: 50,
                               child: ElevatedButton(
                                   onPressed: () async {
                                     var svgImage = RandomAvatarString(
                                         generateRandomString(10),
                                         trBackground: true);
+                                    String username = shortid.generate();
+
                                     debugPrint("Userrole $_userRole");
 
                                     if (_formKey.currentState!.validate() &&
                                         _userRole != null) {
-                                      String username = shortid.generate();
                                       setState(() {
                                         _formValidation =
                                             FormValidation.SUCCESS;
                                         _isLoading = true;
                                       });
 
-                                      AuthenticationHelper.signUp(
-                                        context,
-                                        email: _emailController.text.trim(),
-                                        password:
-                                            _passwordController.text.trim(),
-                                      ).then((value) {
-                                        if (value == null) {
-                                          AuthenticationHelper.userDetailSetup(
-                                                  username,
-                                                  _emailController.text.trim(),
-                                                  _userRole,
-                                                  _passwordController.text
-                                                      .trim(),
-                                                  svgImage)
-                                              .then((value) {
+                                      registerUser(
+                                          context: context,
+                                          email: _emailController.text
+                                              .trim()
+                                              .toLowerCase(),
+                                          password:
+                                              _passwordController.text.trim(),
+                                          username: username,
+                                          image: svgImage,
+                                          role: _userRole.toString()).then((value) {
                                             setState(() {
-                                              _isLoading = false;
+                                              _isLoading =false;
                                             });
-                                            AuthenticationHelper
-                                                .auth.currentUser
-                                                ?.updateDisplayName(username);
-                                          });
-                                          snackBarMSG(context,
-                                              message: 'Login Success',
-                                              color: Colors.green);
-                                              
-                                          SharedPref.setUserdata(
-                                              username,
-                                              _emailController.text,
-                                              _userRole.toString(),
-                                              AuthenticationHelper
-                                                  .auth.currentUser!.uid
-                                                  .toString(),
-                                              svgImage,
-                                              _passwordController.text);
-                                          Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const HomePage(),
-                                              ),
-                                              (route) => false);
-                                        } else {
-                                          snackBarMSG(context,
-                                              message:
-                                                  'Login failed. Please try again.');
-                                        }
                                       });
+
                                     } else {
                                       setState(() {
                                         _formValidation = FormValidation.FAILED;
@@ -230,4 +201,56 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
     );
   }
+}
+
+Future<bool> registerUser({
+  required BuildContext context,
+  required String email,
+  required String password,
+  required String username,
+  required String role,
+  required String image,
+}) async {
+  await AuthenticationHelper.signUp(
+    context,
+    email: email,
+    password: password,
+  ).then((value) async {
+
+    if (value == null) {
+      AuthenticationHelper.userDetailSetup(
+              username, email, role, password, image)
+          .then((value) {
+        AuthenticationHelper.auth.currentUser?.updateDisplayName(username);
+      });
+
+      snackBarMSG(context, message: 'Login Success', color: Colors.green);
+
+      await SharedPref.setUserdata(
+              username,
+              email,
+              role,
+              AuthenticationHelper.auth.currentUser!.uid.toString(),
+              image,
+              password)
+          .then((value) {
+        if (value == true) {
+          Timer(const Duration(seconds: 1), () {
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HomePage(),
+                ),
+                (route) => false);
+          });
+          return true;
+        } else {
+          snackBarMSG(context, message: 'Failed to save data locally');
+        }
+      });
+    } else {
+      snackBarMSG(context, message: 'Login failed. Please try again.');
+    }
+  });
+  return false;
 }
