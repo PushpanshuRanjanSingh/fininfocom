@@ -22,6 +22,7 @@ class _HomePageState extends State<HomePage> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   CollectionReference userCollection =
       AuthenticationHelper.firebaseFirestore.collection('users');
+
   User? user = AuthenticationHelper.auth.currentUser;
   String? email;
   String? username;
@@ -38,6 +39,8 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _usernameController = TextEditingController();
 
   List<String?>? userData;
+  final Stream<QuerySnapshot> _usersStream =
+      FirebaseFirestore.instance.collection('users').snapshots();
 
   getUserDatafromShared() async {
     userData = await SharedPref.getUserData();
@@ -125,19 +128,58 @@ class _HomePageState extends State<HomePage> {
         ]),
       ),
       body: !_loader
-          ? FutureBuilder(
-              future: FireStoreDataBase().getData(),
-              builder: (context, snapshot) {
+          ?
+          // ? FutureBuilder(
+          //     future: FireStoreDataBase().getData(),
+          //     builder: (context, snapshot) {
+          //       if (snapshot.hasError) {
+          //         return const Text(
+          //           "Something went wrong",
+          //         );
+          //       }
+          //       if (snapshot.connectionState == ConnectionState.done) {
+          //         var dataList = snapshot.data as List;
+          //         return buildItems(dataList);
+          //       }
+          //       return const Center(child: CircularProgressIndicator());
+          //     },
+          //   )
+
+          StreamBuilder<QuerySnapshot>(
+              stream: _usersStream,
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasError) {
-                  return const Text(
-                    "Something went wrong",
-                  );
+                  return const Center(child: Text('Something went wrong'));
                 }
-                if (snapshot.connectionState == ConnectionState.done) {
-                  var dataList = snapshot.data as List;
-                  return buildItems(dataList);
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator.adaptive(),);
                 }
-                return const Center(child: CircularProgressIndicator());
+
+                return ListView(
+                  children: snapshot.data!.docs
+                      .map((DocumentSnapshot document) {
+                        Map<String, dynamic> data =
+                            document.data()! as Map<String, dynamic>;
+                        return ListTile(
+                          leading: SvgPicture.string(
+                            data["displayImage"],
+                            height: 50,
+                            width: 50,
+                          ),
+                          title: Text(
+                            data["username"],
+                          ),
+                          subtitle: Text(data["email"]),
+                          trailing: Text(
+                            userRole(data["role"]),
+                          ),
+                        );
+                      })
+                      .toList()
+                      .cast(),
+                );
               },
             )
           : const Center(

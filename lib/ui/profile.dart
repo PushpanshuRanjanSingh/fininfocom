@@ -161,17 +161,25 @@ class _ProfilePageState extends State<ProfilePage> {
                                       message: 'Password Changed Successfully',
                                       color: Colors.green);
                                   AuthenticationHelper.signOut().then((value) {
-                                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const WelcomePage(),), (route) => false);
-                                    if(value==null){}else{
+                                    Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const WelcomePage(),
+                                        ),
+                                        (route) => false);
+                                    if (value == null) {
+                                    } else {
                                       Navigator.pop(context);
                                     }
+
+                                    resetController();
                                   });
                                 }
                               });
                             }
                             setState(() {
                               _isLoading = false;
-                              resetController();
                             });
                           },
                           child: const Text("Update")),

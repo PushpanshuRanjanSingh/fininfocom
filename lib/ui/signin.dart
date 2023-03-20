@@ -105,13 +105,14 @@ class _LoginPageState extends State<LoginPage> {
                       !_isLoading
                           ? SizedBox(
                         width: double.infinity,
+                        height: 50,
                         child: ElevatedButton(
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
+                            onPressed: () async {
+                              if (_formKey.currentState!.validate())  {
                                 setState(() {
                                   _isLoading = true;
                                 });
-                                AuthenticationHelper.signIn(context,
+                              await  AuthenticationHelper.signIn(context,
                                     email:
                                     _emailController.text.trim(),
                                     password: _passwordController.text
@@ -124,16 +125,6 @@ class _LoginPageState extends State<LoginPage> {
                                     String uid = AuthenticationHelper
                                         .auth.currentUser!.uid
                                         .toString();
-
-                                    debugPrint("UUUUUIIID: $uid");
-
-                                    Navigator.pushAndRemoveUntil(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                          const HomePage(),
-                                        ),
-                                            (route) => false);
 
                                     await AuthenticationHelper
                                         .firebaseFirestore.collection("users")
@@ -148,7 +139,17 @@ class _LoginPageState extends State<LoginPage> {
                                               uid,
                                               snapshot["displayImage"],
                                               snapshot["password"]);
-                                        });
+                                        }).then((value) {
+
+                                       Navigator.pushAndRemoveUntil(
+                                           context,
+                                           MaterialPageRoute(
+                                             builder: (context) =>
+                                             const HomePage(),
+                                           ),
+                                               (route) => false);
+
+                                    });
                                   } else {
                                     snackBarMSG(context,
                                         message:
