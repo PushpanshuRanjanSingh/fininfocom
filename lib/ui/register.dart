@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:random_avatar/random_avatar.dart';
 import 'package:shortid/shortid.dart';
@@ -168,7 +170,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         email: _emailController.text.trim(),
                                         password:
                                             _passwordController.text.trim(),
-                                      ).then((value) {
+                                      ).then((value) async {
                                         if (value == null) {
                                           AuthenticationHelper.userDetailSetup(
                                                   username,
@@ -188,23 +190,34 @@ class _RegisterPageState extends State<RegisterPage> {
                                           snackBarMSG(context,
                                               message: 'Login Success',
                                               color: Colors.green);
-                                              
-                                          SharedPref.setUserdata(
-                                              username,
-                                              _emailController.text,
-                                              _userRole.toString(),
-                                              AuthenticationHelper
-                                                  .auth.currentUser!.uid
-                                                  .toString(),
-                                              svgImage,
-                                              _passwordController.text);
-                                          Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const HomePage(),
-                                              ),
-                                              (route) => false);
+
+                                          await SharedPref.setUserdata(
+                                                  username,
+                                                  _emailController.text,
+                                                  _userRole.toString(),
+                                                  AuthenticationHelper
+                                                      .auth.currentUser!.uid
+                                                      .toString(),
+                                                  svgImage,
+                                                  _passwordController.text)
+                                              .then((value) {
+                                            if (value == true) {
+                                              Timer(const Duration(seconds: 1),
+                                                  () {
+                                                Navigator.pushAndRemoveUntil(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const HomePage(),
+                                                    ),
+                                                    (route) => false);
+                                              });
+                                            } else {
+                                              snackBarMSG(context,
+                                                  message:
+                                                      'Failed to save data locally');
+                                            }
+                                          });
                                         } else {
                                           snackBarMSG(context,
                                               message:

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fininfocom/constant/constant.dart';
 import 'package:fininfocom/operation/firebasecall.dart';
@@ -17,6 +19,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final scaffoldKey = GlobalKey<ScaffoldState>();
   CollectionReference userCollection =
       AuthenticationHelper.firebaseFirestore.collection('users');
   User? user = AuthenticationHelper.auth.currentUser;
@@ -38,10 +41,10 @@ class _HomePageState extends State<HomePage> {
 
   getUserDatafromShared() async {
     userData = await SharedPref.getUserData();
+    debugPrint(userData.toString());
   }
 
   getUserDetail() {
-
     userCollection.doc(user!.uid).get().then((DocumentSnapshot snapshot) {
       email = snapshot["email"];
       username = snapshot["username"];
@@ -66,6 +69,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: const Text('Fin Infocom'),
         centerTitle: true,
@@ -245,7 +249,7 @@ class _HomePageState extends State<HomePage> {
                                 password: _passwordController.text.trim(),
                               ).then((value) async {
                                 if (value == null) {
-                                  AuthenticationHelper.userDetailSetup(
+                                  await AuthenticationHelper.userDetailSetup(
                                           username,
                                           _emailController.text.trim(),
                                           _userRole,
@@ -254,11 +258,32 @@ class _HomePageState extends State<HomePage> {
                                       .then((value) {
                                     AuthenticationHelper.auth.currentUser
                                         ?.updateDisplayName(username);
+                                  }).then((value) {
+                                    if (value == null) {
+                                      if (scaffoldKey
+                                          .currentState!.isDrawerOpen) {
+                                        resetController();
+                                        Navigator.pop(context);
+                                        scaffoldKey.currentState!.closeDrawer();
+                                      }
+                                      snackBarMSG(context,
+                                          message: 'User Added Successfully',
+                                          color: Colors.green);
+                                    }
+                                    //TODO: Remove code block
+                                    Future.delayed(const Duration(seconds: 1),
+                                        () async {
+                                      await AuthenticationHelper.signOut()
+                                          .then((value) async {
+                                        if (value == null) {
+                                          await AuthenticationHelper.signIn(
+                                              context,
+                                              email: userData![1]!,
+                                              password: userData![5]!);
+                                        }
+                                      });
+                                    });
                                   });
-                                  snackBarMSG(context,
-                                      message: 'User Added Successfully',
-                                      color: Colors.green);
-                                  
                                 } else {
                                   snackBarMSG(context,
                                       message:
@@ -270,9 +295,6 @@ class _HomePageState extends State<HomePage> {
                                 _formValidation = FormValidation.FAILED;
                               });
                             }
-
-                            debugPrint(
-                                "ERROROOROROROROROROORR: ${AuthenticationHelper.auth.currentUser!.uid.toString()}");
                           },
                           child: const Text("Add User")),
                     )
@@ -285,6 +307,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   resetController() {
+    _usernameController.clear();
     _emailController.clear();
     _passwordController.clear();
     _userRole = null;

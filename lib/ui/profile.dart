@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:fininfocom/constant/constant.dart';
 import 'package:fininfocom/operation/firebasecall.dart';
 import 'package:fininfocom/ui/home.dart';
+import 'package:fininfocom/ui/welcome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -151,13 +154,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                       context,
                                       userData,
                                       _currentPassword.text.trim(),
-                                      _newPassword.text)
-                                  .then((value) {
+                                      _newPassword.text.trim())
+                                  .then((value) async {
                                 if (value == true) {
                                   snackBarMSG(context,
                                       message: 'Password Changed Successfully',
                                       color: Colors.green);
-                                  Navigator.pop(context);
+                                  AuthenticationHelper.signOut().then((value) {
+                                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const WelcomePage(),), (route) => false);
+                                    if(value==null){}else{
+                                      Navigator.pop(context);
+                                    }
+                                  });
                                 }
                               });
                             }

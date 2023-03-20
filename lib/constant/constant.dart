@@ -65,4 +65,6 @@ class SharedPref {
     sharedPreference = await SharedPreferences.getInstance();
     return Future.value(sharedPreference.remove("userdata"));
   }
+
+
 }
